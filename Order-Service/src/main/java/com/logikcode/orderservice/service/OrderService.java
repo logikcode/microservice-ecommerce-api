@@ -1,31 +1,61 @@
 package com.logikcode.orderservice.service;
 
-import com.logikcode.orderservice.dto.OrderLineItemDto;
+import com.logikcode.orderservice.dto.InventoryResponse;
+import  com.logikcode.orderservice.dto.OrderLineItemDto;
 import com.logikcode.orderservice.dto.OrderRequest;
 import com.logikcode.orderservice.model.Order;
 import com.logikcode.orderservice.model.OrderLineItem;
 import com.logikcode.orderservice.repository.OrderRepositoryJpa;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-
+@Transactional
 public class OrderService {
     private final OrderRepositoryJpa repositoryJpa;
+    private final WebClient webClient;
     public List<OrderLineItem> placeCustomerOrder(OrderRequest request){
         Order order = new Order();
         order.setOrderNumber(UUID.randomUUID().toString());
+
+        List<String> skuCodes;
+           skuCodes = request.getOrderLineItemDtoList().stream()
+                .map(orderLineItemDto -> orderLineItemDto.getSkuCode())
+                .collect(Collectors.toList());
+
+
         List<OrderLineItem> orderLineItems;
 
         orderLineItems =  request.getOrderLineItemDtoList().
-                stream().map(this::mapToOrderLineItem).toList();
+                stream().map(this::mapToOrderLineItem).collect(Collectors.toList());
+
         order.setOrderLineItems(orderLineItems);
 
-        repositoryJpa.save(order);
+        // api call to inventory service
+        InventoryResponse[] result = webClient.get()
+                .uri("http://localhost:8081/api/order/create",
+                        uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
+
+                .retrieve()
+                .bodyToMono(InventoryResponse[].class)
+                 .block();
+
+        assert result != null;
+        boolean allOrderInStock = Arrays.stream(result)
+                .allMatch(inventoryResponse -> inventoryResponse.getAvailable());
+                if (allOrderInStock){
+                    repositoryJpa.save(order);
+                }else {
+                    throw new IllegalArgumentException("Product is not in stock");
+                }
 
         return orderLineItems;
     }
