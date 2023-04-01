@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class OrderService {
     private final OrderRepositoryJpa repositoryJpa;
-    private final WebClient webClient;
+    private final WebClient.Builder webClientBuilder;
     public List<OrderLineItem> placeCustomerOrder(OrderRequest request){
         Order order = new Order();
         order.setOrderNumber(UUID.randomUUID().toString());
@@ -31,7 +31,7 @@ public class OrderService {
                 .map(orderLineItemDto -> orderLineItemDto.getSkuCode())
                 .collect(Collectors.toList());
 
-
+        System.out.println("-> SKU CODES "+ skuCodes);
         List<OrderLineItem> orderLineItems;
 
         orderLineItems =  request.getOrderLineItemDtoList().
@@ -40,8 +40,8 @@ public class OrderService {
         order.setOrderLineItems(orderLineItems);
 
         // api call to inventory service
-        InventoryResponse[] result = webClient.get()
-                .uri("http://localhost:8081/api/order/create",
+        InventoryResponse[] result = webClientBuilder.build().get()
+                .uri("http://inventory-service/api/inventory/check",
                         uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
 
                 .retrieve()

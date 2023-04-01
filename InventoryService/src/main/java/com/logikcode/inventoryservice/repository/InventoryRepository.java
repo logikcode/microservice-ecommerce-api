@@ -1,6 +1,5 @@
 package com.logikcode.inventoryservice.repository;
 
-import com.fasterxml.jackson.databind.introspect.AnnotationCollector;
 import com.logikcode.inventoryservice.model.Inventory;
 import org.springframework.data.jpa.repository.JpaRepository;
 
