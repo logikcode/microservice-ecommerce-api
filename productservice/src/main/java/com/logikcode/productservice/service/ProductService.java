@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProductService {
     private final ProductRepositoryJpa productRepository;
-    private Logger logger = LoggerFactory.getLogger(ProductService.class);
+    private final Logger logger = LoggerFactory.getLogger(ProductService.class);
     public void handleProductCreation(ProductRequest productRequest){
         Product product = Product.builder()
                 .name(productRequest.getName())

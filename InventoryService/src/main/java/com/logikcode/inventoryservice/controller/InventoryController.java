@@ -9,14 +9,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/inventory")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 
 public class InventoryController {
     private final InventoryService inventoryService;
-    @GetMapping("/check" )
+    @GetMapping("/inventory/check")
     @ResponseStatus(HttpStatus.OK)
-    public List<InventoryResponse> isItemInStock(@RequestParam List<String> skuCodes){
+    public List<InventoryResponse> isItemInStock(@RequestParam("skuCode") List<String> skuCodes){
+        System.out.println("END POINT HIT "+ skuCodes);
        return inventoryService.isInStock(skuCodes);
     }
 }

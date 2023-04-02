@@ -9,11 +9,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/order")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class OrderController {
     private final OrderService orderService;
-    @PostMapping("/create")
+    @PostMapping("/order/create")
     public String handleOrderPlacing(@RequestBody OrderRequest orderRequest){
         orderService.placeCustomerOrder(orderRequest);
         return "Order successfully placed";

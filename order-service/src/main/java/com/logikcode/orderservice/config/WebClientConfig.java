@@ -15,10 +15,10 @@ public class WebClientConfig {
         return WebClient.builder();
     }
 
-    @Bean
-   // Bean Configuration for WebClient for service calls;
-    //Note: with no load balancing
-    public WebClient webClient(){
-        return WebClient.builder().build();
-    }
+//    @Bean
+//   // Bean Configuration for WebClient for service calls;
+//    //Note: with no load balancing
+//    public WebClient webClient(){
+//        return WebClient.builder().build();
+//    }
 }
