@@ -39,18 +39,15 @@ public class OrderService {
 
         order.setOrderLineItems(orderLineItems);
 
-        InventoryResponse[] result = webClientBuilder.build().get().uri(uriBuilder -> uriBuilder
-                .path("api/inventory/check/")
-                .queryParam("skuCode", skuCodes)
-                .build()).retrieve().bodyToMono(InventoryResponse[].class).block();
+
  //        api call to inventory service
-//        InventoryResponse[] result = webClientBuilder.build().get()
-//                .uri("http://inventory-service/api/inventory/check",
-//                        uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
-//                .retrieve()
-//                .bodyToMono(InventoryResponse[].class)
-//                 .block();
-        //inventory-service/api/inventory/check
+        InventoryResponse[] result = webClientBuilder.build().get()
+                .uri("http://inventory-service/api/inventory/check",
+                        uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
+                .retrieve()
+                .bodyToMono(InventoryResponse[].class)
+                 .block();
+//        inventory-service/api/inventory/check
         assert result != null;
         boolean allOrderInStock = Arrays.stream(result)
                 .allMatch(inventoryResponse -> inventoryResponse.getAvailable());
