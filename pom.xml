@@ -13,9 +13,9 @@
     <version>0.0.1-SNAPSHOT</version>
 
     <modules>
-        <module>productservice</module>
+        <module>product-service</module>
         <module>order-service</module>
-        <module>InventoryService</module>
+        <module>inventory-service</module>
         <module>discovery-service</module>
         <module>serivices-api-gateway</module>
 

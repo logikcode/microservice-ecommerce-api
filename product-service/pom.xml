@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.logikcode</groupId>
-	<artifactId>productservice</artifactId>
+	<artifactId>product-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>productservice</name>
+	<name>product service</name>
 	<description>Product-Service</description>
 	<properties>
 		<java.version>11</java.version>
