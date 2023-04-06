@@ -3,12 +3,14 @@ package com.logikcode.orderservice.service;
 import com.logikcode.orderservice.dto.InventoryResponse;
 import com.logikcode.orderservice.dto.OrderLineItemDto;
 import com.logikcode.orderservice.dto.OrderRequest;
+import com.logikcode.orderservice.event.OrderPlaceEvent;
 import com.logikcode.orderservice.model.Order;
 import com.logikcode.orderservice.model.OrderLineItem;
 import com.logikcode.orderservice.repository.OrderRepositoryJpa;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -25,7 +27,7 @@ public class OrderService {
     private final OrderRepositoryJpa repositoryJpa;
     private final WebClient.Builder webClientBuilder;
     private final Tracer tracer;
-
+    private final KafkaTemplate<String, OrderPlaceEvent> kafkaTemplate;
     public String placeCustomerOrder(OrderRequest request){
         final String SUCCESS_MESSAGE = "Order successfully placed";
         final String UNSUCCESSFUL_MESSAGE = "Order failed";
@@ -64,6 +66,7 @@ public class OrderService {
                     .allMatch(inventoryResponse -> inventoryResponse.getAvailable());
             if (allOrderInStock){
                 repositoryJpa.save(order);
+                kafkaTemplate.send("notificationTopic", new OrderPlaceEvent(order.getOrderNumber()));
                 return SUCCESS_MESSAGE;
             }else {
                 throw new IllegalArgumentException("Product is not in stock");

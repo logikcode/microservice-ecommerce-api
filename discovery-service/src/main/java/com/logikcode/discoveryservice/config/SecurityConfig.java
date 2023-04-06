@@ -1,6 +1,5 @@
 package com.logikcode.discoveryservice.config;
 
-import com.sun.xml.bind.v2.TODO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
