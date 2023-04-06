@@ -23,7 +23,7 @@ public class InventoryService {
     @SneakyThrows
     public List<InventoryResponse> isInStock(List<String> skuCodes){
         logger.info(" Resilience4j TimeLimiter 'wait' simulation starts...");
-        Thread.sleep(5000L);
+        Thread.sleep(2000L);
         logger.info(" Resilience4j TimeLimiter 'wait' simulation ends");
 
         List<Inventory>  inventoryList = inventoryRepository.findBySkuCodeIn(skuCodes);

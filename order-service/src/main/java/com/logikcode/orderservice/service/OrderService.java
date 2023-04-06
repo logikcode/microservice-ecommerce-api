@@ -7,6 +7,8 @@ import com.logikcode.orderservice.model.Order;
 import com.logikcode.orderservice.model.OrderLineItem;
 import com.logikcode.orderservice.repository.OrderRepositoryJpa;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
 public class OrderService {
     private final OrderRepositoryJpa repositoryJpa;
     private final WebClient.Builder webClientBuilder;
+    private final Tracer tracer;
 
     public String placeCustomerOrder(OrderRequest request){
         final String SUCCESS_MESSAGE = "Order successfully placed";
@@ -42,25 +45,33 @@ public class OrderService {
 
         order.setOrderLineItems(orderLineItems);
 
-
- //        api call to inventory service
-        InventoryResponse[] result = webClientBuilder.build().get()
-                .uri("http://inventory-service/api/inventory/check",
-                        uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
-                .retrieve()
-                .bodyToMono(InventoryResponse[].class)
-                 .block();
+    /*+ manual creation of span for distributed tracing due to fact that this code bloce executes in another thread
+        * and service call to 'inventory service would not be picked up by default by zipkin
+    */
+        Span inventoryLookup = tracer.nextSpan().name("InventoryServiceLookup");
+        try(Tracer.SpanInScope spanInScope = tracer.withSpan(inventoryLookup.start())){
+            //        api call to inventory service
+            InventoryResponse[] result = webClientBuilder.build().get()
+                    .uri("http://inventory-service/api/inventory/check",
+                            uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
+                    .retrieve()
+                    .bodyToMono(InventoryResponse[].class)
+                    .block();
 
 //        inventory-service/api/inventory/check
-        assert result != null;
-        boolean allOrderInStock = Arrays.stream(result)
-                .allMatch(inventoryResponse -> inventoryResponse.getAvailable());
-                if (allOrderInStock){
-                    repositoryJpa.save(order);
-                    return SUCCESS_MESSAGE;
-                }else {
-                    throw new IllegalArgumentException("Product is not in stock");
-                }
+            assert result != null;
+            boolean allOrderInStock = Arrays.stream(result)
+                    .allMatch(inventoryResponse -> inventoryResponse.getAvailable());
+            if (allOrderInStock){
+                repositoryJpa.save(order);
+                return SUCCESS_MESSAGE;
+            }else {
+                throw new IllegalArgumentException("Product is not in stock");
+            }
+
+        } finally {
+            inventoryLookup.end();
+        }
 
     }
 
