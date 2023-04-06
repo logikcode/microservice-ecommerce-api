@@ -1,7 +1,7 @@
 package com.logikcode.orderservice.service;
 
 import com.logikcode.orderservice.dto.InventoryResponse;
-import  com.logikcode.orderservice.dto.OrderLineItemDto;
+import com.logikcode.orderservice.dto.OrderLineItemDto;
 import com.logikcode.orderservice.dto.OrderRequest;
 import com.logikcode.orderservice.model.Order;
 import com.logikcode.orderservice.model.OrderLineItem;
@@ -22,7 +22,10 @@ import java.util.stream.Collectors;
 public class OrderService {
     private final OrderRepositoryJpa repositoryJpa;
     private final WebClient.Builder webClientBuilder;
-    public List<OrderLineItem> placeCustomerOrder(OrderRequest request){
+
+    public String placeCustomerOrder(OrderRequest request){
+        final String SUCCESS_MESSAGE = "Order successfully placed";
+        final String UNSUCCESSFUL_MESSAGE = "Order failed";
         Order order = new Order();
         order.setOrderNumber(UUID.randomUUID().toString());
 
@@ -47,17 +50,18 @@ public class OrderService {
                 .retrieve()
                 .bodyToMono(InventoryResponse[].class)
                  .block();
+
 //        inventory-service/api/inventory/check
         assert result != null;
         boolean allOrderInStock = Arrays.stream(result)
                 .allMatch(inventoryResponse -> inventoryResponse.getAvailable());
                 if (allOrderInStock){
                     repositoryJpa.save(order);
+                    return SUCCESS_MESSAGE;
                 }else {
                     throw new IllegalArgumentException("Product is not in stock");
                 }
 
-        return orderLineItems;
     }
 
     private OrderLineItem mapToOrderLineItem(OrderLineItemDto orderLineItemDto){
